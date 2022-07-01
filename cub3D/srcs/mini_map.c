@@ -6,72 +6,9 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 01:14:23 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/06/30 05:12:43 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/01 05:17:29 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-	// float	x;
-	// float	y;
-	// (void)img;
-
-	// x = stuff.px;
-	// y = stuff.py;
-	// stuff.raycast.ra = stuff.pa;
-	// while (stuff.raycast.r < 1)
-	// {
-
-	// 	stuff.raycast.dof = 0;
-	// 	aTan = -1 / tan(stuff.raycast.ra);
-	// 	if (stuff.raycast.ra > PI)
-	// 	{
-	// 		stuff.raycast.ry = (((int)stuff.py>>6)<<6) -0.0001;
-	// 		stuff.raycast.rx = (stuff.py - stuff.raycast.ry) * aTan + stuff.px;
-	// 		stuff.raycast.yo = -64;
-	// 		stuff.raycast.xo = -stuff.raycast.yo * aTan;
-	// 	}
-	// 	if (stuff.raycast.ra < PI)
-	// 	{
-	// 		stuff.raycast.ry = (((int)stuff.py>>6)<<6) +64;
-	// 		stuff.raycast.rx = (stuff.py - stuff.raycast.ry) * aTan + stuff.px;
-	// 		stuff.raycast.yo = 64;
-	// 		stuff.raycast.xo = -stuff.raycast.yo * aTan;
-	// 	}
-	// 	if (stuff.raycast.ra == 0 || stuff.raycast.ra == PI)
-	// 	{
-	// 		stuff.raycast.rx = stuff.px;
-	// 		stuff.raycast.ry = stuff.py;
-	// 		stuff.raycast.dof = 8;
-	// 	}
-	// 	while (stuff.raycast.dof < 8)
-	// 	{
-	// 		stuff.raycast.mx = (int)(stuff.raycast.rx) >> 6;
-	// 		stuff.raycast.my = (int)(stuff.raycast.ry) >> 6;
-	// 		printf("mx : %i\n", stuff.raycast.mx);
-	// 		printf("my : %i\n", stuff.raycast.my);
-	// 		if (stuff.raycast.my < stuff.line_count && stuff.raycast.mx < stuff.line_len && stuff.raycast.my > 0 && stuff.raycast.mx > 0 && map[stuff.raycast.my][stuff.raycast.mx] == 1)
-	// 			stuff.raycast.dof = 8;
-	// 		else
-	// 		{
-	// 			stuff.raycast.rx += stuff.raycast.xo;
-	// 			stuff.raycast.ry += stuff.raycast.yo;
-	// 			stuff.raycast.dof += 1;
-	// 		}
-	// 	}
-	// 	x = stuff.px;
-	// 	y = stuff.py;
-	// 	while ((int)x != (int)stuff.raycast.rx && (int)y != (int)stuff.raycast.ry)
-	// 	{
-	// 		x += stuff.pdx;
-	// 		y += stuff.pdy;
-	// 		printf("x : %f\nrx : %f\n", x, stuff.raycast.rx);
-	// 		printf("y : %f\nry : %f\n", y, stuff.raycast.ry);
-	// 		if ((x > 0 && x < stuff.map_width) && (y > 0 && y < stuff.map_height))
-	// 			my_mlx_pixel_put(img, x, y, 0x00FF4141);
-	// 		else
-	// 			break;
-	// 	}
-	// 	stuff.raycast.r++;
-	// }
 
 #include "../includes/cub3D.h"
 
@@ -106,8 +43,8 @@ void	my_mlx_pixel_put(t_img *data, int x, int y, int color)
 
 void	draw_rect(t_rect rect, int color, t_img *img)
 {
-	int x;
-	int y;
+	float x;
+	float y;
 
 	y = rect.y;
 	while (y < rect.y + rect.height)
@@ -210,7 +147,7 @@ void	draw_player(t_img *img, t_stuff stuff)
 		width = -2;
 		height++;
 	}
-	while (i < 50)
+	while (i < (50 * MINIMAP_SCALE_FACTOR))
 	{
 		stuff.px += stuff.pdx/5;
 		stuff.py += stuff.pdy/5;
@@ -254,72 +191,74 @@ float	distance_bet_points(float x1, float y1, float x2, float y2)
 	return (sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)));
 }
 
-void	draw_rays(t_img *img, t_stuff stuff, char **map)
+void	draw_rays(t_img *img, t_stuff *stuff, char **map)
 {
 	//////////////////////////////////////
 	// HORIONTAL RAY-GRID INTERSECTIONS
 	//////////////////////////////////////
 	int		i;
-	int		num_rays;
 	int		column_id;
 	float	ray_angle;
 	int		bc_angle;
 
 	i = 0;
-	num_rays = stuff.map_width;
+	stuff->raycast->num_rays = WINDOW_WIDTH / WALL_STRIP;
 	column_id = 0;
-	ray_angle = stuff.pa - (FOV_ANGLE / 2);
-	while (i < num_rays)
+	ray_angle = stuff->pa - (FOV_ANGLE / 2);
+	stuff->raycast->rays = malloc(stuff->raycast->num_rays * sizeof(float));
+	if (!stuff->raycast->rays)
+		return;
+	while (i < stuff->raycast->num_rays)
 	{
 		bc_angle = 0;
-		stuff.raycast.found_vhit = 0;
-		stuff.raycast.found_hhit = 0;
-		stuff.raycast.was_hit_vrt = 0;
+		stuff->raycast->found_vhit = 0;
+		stuff->raycast->found_hhit = 0;
+		stuff->raycast->was_hit_vrt = 0;
 		if (ray_angle < 0)
 			ray_angle += 2*PI;
 		if (ray_angle > 2*PI)
 		ray_angle -= 2*PI;
-		check_direction(&stuff.raycast, ray_angle);
+		check_direction(stuff->raycast, ray_angle);
 		// y-coord of the closest horizontal grid intersection
-		stuff.raycast.yintercept = (floor(stuff.py / TILE_SIZE) * TILE_SIZE);
-		if (stuff.raycast.down)
-			stuff.raycast.yintercept += TILE_SIZE;
+		stuff->raycast->yintercept = (floor(stuff->py / TILE_SIZE) * TILE_SIZE);
+		if (stuff->raycast->down)
+			stuff->raycast->yintercept += TILE_SIZE;
 			
 		// x-coord of the cosst horizontal grid intersection
-		stuff.raycast.xintercept = stuff.px + (stuff.raycast.yintercept - stuff.py) / tan(ray_angle);
+		stuff->raycast->xintercept = stuff->px + (stuff->raycast->yintercept - stuff->py) / tan(ray_angle);
 		
 		// calculate increment xstep step
-		stuff.raycast.ystep = TILE_SIZE;
-		if (stuff.raycast.up)
-			stuff.raycast.ystep *= -1;
+		stuff->raycast->ystep = TILE_SIZE;
+		if (stuff->raycast->up)
+			stuff->raycast->ystep *= -1;
 			
-		stuff.raycast.xstep = TILE_SIZE / tan(ray_angle);
-		if (stuff.raycast.left && stuff.raycast.xstep > 0)
-			stuff.raycast.xstep *= -1;
-		if (stuff.raycast.right && stuff.raycast.xstep < 0)
-			stuff.raycast.xstep *= -1;
+		stuff->raycast->xstep = TILE_SIZE / tan(ray_angle);
+		if (stuff->raycast->left && stuff->raycast->xstep > 0)
+			stuff->raycast->xstep *= -1;
+		if (stuff->raycast->right && stuff->raycast->xstep < 0)
+			stuff->raycast->xstep *= -1;
 			
-		stuff.raycast.next_htouchx = stuff.raycast.xintercept;
-		stuff.raycast.next_htouchy = stuff.raycast.yintercept;
+		stuff->raycast->next_htouchx = stuff->raycast->xintercept;
+		stuff->raycast->next_htouchy = stuff->raycast->yintercept;
 		
-		if (stuff.raycast.up)
+		if (stuff->raycast->up)
 			bc_angle = 1;
 		
 		// increment xstep and ystep until we find a wall
-		while (is_in_map(stuff.raycast.next_htouchx, stuff.raycast.next_htouchy, stuff.map_width, stuff.map_height))
+		while (is_in_map(stuff->raycast->next_htouchx, stuff->raycast->next_htouchy, stuff->map_width, stuff->map_height))
 		{
-			if (has_wall_at(stuff.raycast.next_htouchx, stuff.raycast.next_htouchy - bc_angle, map, stuff))
+			if (has_wall_at(stuff->raycast->next_htouchx, stuff->raycast->next_htouchy - bc_angle, map, *stuff))
 			{
-				stuff.raycast.found_hhit = 1;
-				stuff.raycast.hrz_wall_hitx = stuff.raycast.next_htouchx;
-				stuff.raycast.hrz_wall_hity = stuff.raycast.next_htouchy;
-				// my_mlx_pixel_put(img, stuff.raycast.hrz_wall_hitx, stuff.raycast.hrz_wall_hity, 0xFF4141);
+				stuff->raycast->found_hhit = 1;
+				stuff->raycast->hrz_wall_hitx = stuff->raycast->next_htouchx;
+				stuff->raycast->hrz_wall_hity = stuff->raycast->next_htouchy;
+				// my_mlx_pixel_put(img, stuff->raycast->hrz_wall_hitx, stuff->raycast->hrz_wall_hity, 0xFF4141);
 				break;
 			}
 			else
 			{
-				stuff.raycast.next_htouchx += stuff.raycast.xstep;
-				stuff.raycast.next_htouchy += stuff.raycast.ystep;
+				stuff->raycast->next_htouchx += stuff->raycast->xstep;
+				stuff->raycast->next_htouchy += stuff->raycast->ystep;
 			}
 		}
 		bc_angle = 0;
@@ -327,94 +266,141 @@ void	draw_rays(t_img *img, t_stuff stuff, char **map)
 		// VERTICAL RAY-GRID INTERSECTIONS
 		//////////////////////////////////////
 
-		// check_direction(&stuff.raycast, ray_angle);
+		// check_direction(&stuff->raycast, ray_angle);
 		// x-coord of the closest vertical grid intersection
-		stuff.raycast.xintercept = (floor(stuff.px / TILE_SIZE) * TILE_SIZE);
-		if (stuff.raycast.right)
-			stuff.raycast.xintercept += TILE_SIZE;
+		stuff->raycast->xintercept = (floor(stuff->px / TILE_SIZE) * TILE_SIZE);
+		if (stuff->raycast->right)
+			stuff->raycast->xintercept += TILE_SIZE;
 			
 		// y-coord of the cosst vertical grid intersection
-		stuff.raycast.yintercept = stuff.py + (stuff.raycast.xintercept - stuff.px) * tan(ray_angle);
+		stuff->raycast->yintercept = stuff->py + (stuff->raycast->xintercept - stuff->px) * tan(ray_angle);
 		
 		// calculate increment xstep step
-		stuff.raycast.xstep = TILE_SIZE;
-		if (stuff.raycast.left)
-			stuff.raycast.xstep *= -1;
+		stuff->raycast->xstep = TILE_SIZE;
+		if (stuff->raycast->left)
+			stuff->raycast->xstep *= -1;
 			
-		stuff.raycast.ystep = TILE_SIZE * tan(ray_angle);
-		if (stuff.raycast.up && stuff.raycast.ystep > 0)
-			stuff.raycast.ystep *= -1;
-		if (stuff.raycast.down && stuff.raycast.ystep < 0)
-			stuff.raycast.ystep *= -1;
+		stuff->raycast->ystep = TILE_SIZE * tan(ray_angle);
+		if (stuff->raycast->up && stuff->raycast->ystep > 0)
+			stuff->raycast->ystep *= -1;
+		if (stuff->raycast->down && stuff->raycast->ystep < 0)
+			stuff->raycast->ystep *= -1;
 			
-		stuff.raycast.next_vtouchx = stuff.raycast.xintercept;
-		stuff.raycast.next_vtouchy = stuff.raycast.yintercept;
+		stuff->raycast->next_vtouchx = stuff->raycast->xintercept;
+		stuff->raycast->next_vtouchy = stuff->raycast->yintercept;
 		
-		if (stuff.raycast.left)
+		if (stuff->raycast->left)
 			bc_angle = 1;
 		
 		// increment xstep and ystep until we find a wall
-		while (is_in_map(stuff.raycast.next_vtouchx, stuff.raycast.next_vtouchy, stuff.map_width, stuff.map_height))
+		while (is_in_map(stuff->raycast->next_vtouchx, stuff->raycast->next_vtouchy, stuff->map_width, stuff->map_height))
 		{
-			if (has_wall_at(stuff.raycast.next_vtouchx - bc_angle, stuff.raycast.next_vtouchy, map, stuff))
+			if (has_wall_at(stuff->raycast->next_vtouchx - bc_angle, stuff->raycast->next_vtouchy, map, *stuff))
 			{
-				stuff.raycast.found_vhit = 1;
-				stuff.raycast.vrt_wall_hitx = stuff.raycast.next_vtouchx;
-				stuff.raycast.vrt_wall_hity = stuff.raycast.next_vtouchy;
-				// my_mlx_pixel_put(img, stuff.raycast.vrt_wall_hitx, stuff.raycast.vrt_wall_hity, 0xFF4141);
+				stuff->raycast->found_vhit = 1;
+				stuff->raycast->vrt_wall_hitx = stuff->raycast->next_vtouchx;
+				stuff->raycast->vrt_wall_hity = stuff->raycast->next_vtouchy;
+				// my_mlx_pixel_put(img, stuff->raycast->vrt_wall_hitx, stuff->raycast->vrt_wall_hity, 0xFF4141);
 				break;
 			}
 			else
 			{
-				stuff.raycast.next_vtouchx += stuff.raycast.xstep;
-				stuff.raycast.next_vtouchy += stuff.raycast.ystep;
+				stuff->raycast->next_vtouchx += stuff->raycast->xstep;
+				stuff->raycast->next_vtouchy += stuff->raycast->ystep;
 			}
 		}
 		bc_angle = 0;
 		// chosse the smallest value bet vert and horz
-		if (stuff.raycast.found_hhit)
-			stuff.raycast.h_distance = distance_bet_points(stuff.px, stuff.py, stuff.raycast.hrz_wall_hitx, stuff.raycast.hrz_wall_hity);
+		if (stuff->raycast->found_hhit)
+			stuff->raycast->h_distance = distance_bet_points(stuff->px, stuff->py, stuff->raycast->hrz_wall_hitx, stuff->raycast->hrz_wall_hity);
 		else
-			stuff.raycast.h_distance = 99999999.9;
-		if (stuff.raycast.found_vhit)
-			stuff.raycast.v_distance = distance_bet_points(stuff.px, stuff.py, stuff.raycast.vrt_wall_hitx, stuff.raycast.vrt_wall_hity);
+			stuff->raycast->h_distance = 99999999.9;
+		if (stuff->raycast->found_vhit)
+			stuff->raycast->v_distance = distance_bet_points(stuff->px, stuff->py, stuff->raycast->vrt_wall_hitx, stuff->raycast->vrt_wall_hity);
 		else
-			stuff.raycast.v_distance = 99999999.9;
+			stuff->raycast->v_distance = 99999999.9;
 
-		if (stuff.raycast.h_distance < stuff.raycast.v_distance)
+		if (stuff->raycast->h_distance < stuff->raycast->v_distance)
 		{
-			stuff.raycast.wall_hitx = stuff.raycast.hrz_wall_hitx;
-			stuff.raycast.wall_hity = stuff.raycast.hrz_wall_hity;
-			stuff.raycast.distance = stuff.raycast.h_distance;
+			stuff->raycast->wall_hitx = stuff->raycast->hrz_wall_hitx;
+			stuff->raycast->wall_hity = stuff->raycast->hrz_wall_hity;
+			stuff->raycast->distance = stuff->raycast->h_distance;
 		}
 		else
 		{
-			stuff.raycast.wall_hitx = stuff.raycast.vrt_wall_hitx;
-			stuff.raycast.wall_hity = stuff.raycast.vrt_wall_hity;
-			stuff.raycast.distance = stuff.raycast.v_distance;
-			stuff.raycast.was_hit_vrt = 1;
+			stuff->raycast->wall_hitx = stuff->raycast->vrt_wall_hitx;
+			stuff->raycast->wall_hity = stuff->raycast->vrt_wall_hity;
+			stuff->raycast->distance = stuff->raycast->v_distance;
+			stuff->raycast->was_hit_vrt = 1;
 		}
 		float j = 0;
-		float x = stuff.px;
-		float y = stuff.py;
-		while (j < stuff.raycast.distance)
+		float x = stuff->px;
+		float y = stuff->py;
+		while (j < stuff->raycast->distance)
 		{
-			my_mlx_pixel_put(img, /*stuff.raycast.wall_hitx*/x, /*stuff.raycast.wall_hity*/y, 0xFF63EB);
+			my_mlx_pixel_put(img, /*stuff->raycast->wall_hitx*/x, /*stuff.raycast->wall_hity*/y, 0xFF63EB);
 			x += cos(ray_angle);
 			y += sin(ray_angle);
 			j++;
 		}
+		stuff->raycast->rays[i] = stuff->raycast->distance;
 		i++;
 		column_id++;
-		ray_angle += FOV_ANGLE / num_rays;
+		ray_angle += FOV_ANGLE / stuff->raycast->num_rays;
+	}
+}
+
+void	render_3D(t_img *img, t_stuff *stuff, char **map)
+{
+	(void)map;
+	(void)img;
+	int		i;
+	float	ray;
+	float	wallstrip_height;
+	float	dist_project_plane;
+	t_rect	rect;
+	
+	
+	int x = 0;
+	int y = 0;
+	while(y < WINDOW_HEIGHT)
+	{
+		x = 0;
+		while (x < WINDOW_WIDTH)
+		{
+			if (!(x < stuff->map_width && y < stuff->map_height))
+				my_mlx_pixel_put(img, x, y, 0x00000000);
+			x++;
+		}
+		y++;
+	}
+	
+	i = 0;
+	dist_project_plane = (WINDOW_WIDTH / 2) / tan(FOV_ANGLE / 2);
+	while (i < stuff->raycast->num_rays)
+	{
+		ray = stuff->raycast->rays[i];
+
+		// projected wall height
+		wallstrip_height = (TILE_SIZE / ray) * dist_project_plane;
+		rect.x = i * WALL_STRIP;
+		rect.y = (WINDOW_HEIGHT / 2) - (wallstrip_height / 2);
+		rect.width = WALL_STRIP;
+		rect.height = wallstrip_height;
+		// printf("ray : %f\nx : %f\ny : %f\nwidth : %f\nheight : %f\n", ray, rect.x, rect.y, rect.width, rect.height);
+		// my_mlx_pixel_put(img, rect.x, rect.y, 0x009CFF9F);
+		draw_rect(rect, 0x009CFF9F, img);
+		
+		i++;
 	}
 }
 
 void	mini_map(char **map, t_stuff stuff)
 {
-	t_data	mlx;
-	t_combo	combo;
-	t_img	img;
+	t_data		mlx;
+	t_combo		combo;
+	t_img		img;
+	t_raycast 	raycast;
 
 	stuff.px = TILE_SIZE*(stuff.px) + TILE_SIZE/2;
 	stuff.py = TILE_SIZE*(stuff.py) + TILE_SIZE/2;
@@ -426,6 +412,8 @@ void	mini_map(char **map, t_stuff stuff)
 	combo.map = map;
 	combo.stuff = &stuff;
 	combo.count = 0;
+	ft_bzero(&raycast, sizeof(t_raycast));
+	stuff.raycast = &raycast;
 	ft_bzero(&mlx, sizeof(t_data));
 	mlx.mlx = mlx_init();
 	if (mlx.mlx == NULL)
@@ -433,17 +421,22 @@ void	mini_map(char **map, t_stuff stuff)
 		free_map(map, stuff.line_count);
 		exit(1);
 	}
-	mlx.win = mlx_new_window(mlx.mlx, stuff.map_width, stuff.map_height, "Mini Map");
+	mlx.win = mlx_new_window(mlx.mlx, WINDOW_WIDTH, WINDOW_HEIGHT, "cub3D lzaccome");
 	combo.mlx = &mlx;
-	img.img = mlx_new_image(mlx.mlx, stuff.map_width, stuff.map_height);
+	img.img = mlx_new_image(mlx.mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	img.addr = mlx_get_data_addr(img.img, &img.bits_per_pixel, &img.line_length, &img.endian);
 	// draw_map()
 	fill_grey(stuff.map_width, stuff.map_height, &img);
 	build_walls(map, &img, &stuff);
 	draw_player(&img, stuff);
-	draw_rays(&img, stuff, map);
-	// my_mlx_pixel_put(&img, 5, 5, 0x00FF0000);
-	// my_mlx_pixel_put(&img, 7, 7, 0x00FF0000);
+	draw_rays(&img, &stuff, map);
+	// int i = 0;
+	// while (stuff.raycast->rays[i])
+	// {
+	// 	printf("ray : %f\n", stuff.raycast->rays[i]);
+	// 	i++;
+	// }
+	render_3D(&img, &stuff, map);
 	combo.img = &img;
 	mlx_put_image_to_window(mlx.mlx, mlx.win, img.img, 0, 0);
 	mlx_hook(mlx.win, 17, 0L, &ft_cross, &combo);

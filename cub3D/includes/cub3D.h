@@ -6,7 +6,7 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/07 20:19:03 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/06/30 04:35:32 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/01 04:58:11 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,13 @@
 # include <math.h>
 # include "../mlx_linux/mlx.h"
 
+# define WINDOW_WIDTH 1500
+# define WINDOW_HEIGHT 1000
 # define PI 3.1415926535
-# define TILE_SIZE 64
+# define MINIMAP_SCALE_FACTOR 0.5
+# define TILE_SIZE (64 * MINIMAP_SCALE_FACTOR)
 # define FOV_ANGLE 60 * (PI / 180)
+# define WALL_STRIP 2
 // # define NUM_RAYS 
 
 // mp = position sur la map
@@ -74,6 +78,8 @@ typedef struct	s_raycast
 	int		down;
 	int		right;
 	int		left;
+	int		num_rays;
+	float	*rays;
 }					t_raycast;
 
 typedef struct s_stuff
@@ -88,7 +94,7 @@ typedef struct s_stuff
 	float 		pa; //player angle
 	int			map_width;
 	int			map_height;
-	t_raycast	raycast;
+	t_raycast	*raycast;
 	
 }				t_stuff;
 
@@ -116,10 +122,10 @@ typedef struct s_combo {
 }				t_combo;
 
 typedef struct s_rect {
-	int	x;
-	int	y;
-	int	width;
-	int	height;
+	float	x;
+	float	y;
+	float	width;
+	float	height;
 }				t_rect;
 
 
@@ -181,7 +187,8 @@ void	free_mlx(t_data *mlx, t_img *img, char **map, int line_count);
 void	fill_grey(int width, int height, t_img *img);
 void	draw_player(t_img *img, t_stuff stuff);
 void	build_walls(char **map, t_img *img, t_stuff *stuff);
-void	draw_rays(t_img *img, t_stuff stuff, char **map);
+void	draw_rays(t_img *img, t_stuff *stuff, char **map);
+void	render_3D(t_img *img, t_stuff *stuff, char **map);
 // void	draw_map(t_stuff stuff, t_img *img);
 
 /* -------------------------------------------------------------------------- */

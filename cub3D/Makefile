@@ -6,7 +6,7 @@
 #    By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/06/07 20:03:01 by lzaccome          #+#    #+#              #
-#    Updated: 2022/06/15 01:16:18 by lzaccome         ###   ########.fr        #
+#    Updated: 2022/07/01 00:40:22 by lzaccome         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,6 +15,8 @@ NAME = cub3D
 CC = clang
 
 CFLAGS =  -Wall -Wextra -Werror
+
+# CFLAGS += -fsanitize=address -g3
 
 SRCS =	srcs/main.c \
 		srcs/parse.c \
