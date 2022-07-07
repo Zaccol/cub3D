@@ -6,7 +6,7 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/07 20:19:03 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/07/01 04:58:11 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/08 00:42:00 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,8 @@ typedef struct	s_raycast
 	float	next_htouchy;
 	float	next_vtouchx;
 	float	next_vtouchy;
+	float	*rays_angle;
+	float	*rays;
 	int		found_vhit;
 	int		found_hhit;
 	int		was_hit_vrt;
@@ -79,7 +81,6 @@ typedef struct	s_raycast
 	int		right;
 	int		left;
 	int		num_rays;
-	float	*rays;
 }					t_raycast;
 
 typedef struct s_stuff

@@ -6,7 +6,7 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 01:14:23 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/07/01 05:17:29 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/08 00:38:08 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -198,14 +198,15 @@ void	draw_rays(t_img *img, t_stuff *stuff, char **map)
 	//////////////////////////////////////
 	int		i;
 	int		column_id;
-	float	ray_angle;
 	int		bc_angle;
+	float	ray_angle;
 
 	i = 0;
 	stuff->raycast->num_rays = WINDOW_WIDTH / WALL_STRIP;
 	column_id = 0;
 	ray_angle = stuff->pa - (FOV_ANGLE / 2);
 	stuff->raycast->rays = malloc(stuff->raycast->num_rays * sizeof(float));
+	stuff->raycast->rays_angle = malloc(stuff->raycast->num_rays * sizeof(float));
 	if (!stuff->raycast->rays)
 		return;
 	while (i < stuff->raycast->num_rays)
@@ -344,6 +345,7 @@ void	draw_rays(t_img *img, t_stuff *stuff, char **map)
 			j++;
 		}
 		stuff->raycast->rays[i] = stuff->raycast->distance;
+		stuff->raycast->rays_angle[i] = ray_angle;
 		i++;
 		column_id++;
 		ray_angle += FOV_ANGLE / stuff->raycast->num_rays;
@@ -360,7 +362,7 @@ void	render_3D(t_img *img, t_stuff *stuff, char **map)
 	float	dist_project_plane;
 	t_rect	rect;
 	
-	
+	// clear the window with black, expect minimap
 	int x = 0;
 	int y = 0;
 	while(y < WINDOW_HEIGHT)
@@ -379,10 +381,12 @@ void	render_3D(t_img *img, t_stuff *stuff, char **map)
 	dist_project_plane = (WINDOW_WIDTH / 2) / tan(FOV_ANGLE / 2);
 	while (i < stuff->raycast->num_rays)
 	{
-		ray = stuff->raycast->rays[i];
+		ray = (stuff->raycast->rays[i] * cos(stuff->raycast->rays_angle[i] - stuff->pa));
 
 		// projected wall height
 		wallstrip_height = (TILE_SIZE / ray) * dist_project_plane;
+		if (wallstrip_height > WINDOW_HEIGHT)
+			wallstrip_height = WINDOW_HEIGHT;
 		rect.x = i * WALL_STRIP;
 		rect.y = (WINDOW_HEIGHT / 2) - (wallstrip_height / 2);
 		rect.width = WALL_STRIP;
@@ -393,6 +397,8 @@ void	render_3D(t_img *img, t_stuff *stuff, char **map)
 		
 		i++;
 	}
+	free(stuff->raycast->rays_angle);
+	free(stuff->raycast->rays);
 }
 
 void	mini_map(char **map, t_stuff stuff)
