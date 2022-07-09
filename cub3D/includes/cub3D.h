@@ -6,7 +6,7 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/07 20:19:03 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/07/09 03:31:48 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/09 15:38:22 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,7 @@ typedef struct	s_raycast
 	float	wallstrip_height;
 	int		found_vhit;
 	int		found_hhit;
-	int		was_hit_vrt;
+	int		*was_hit_vrt;
 	int		up;
 	int		down;
 	int		right;

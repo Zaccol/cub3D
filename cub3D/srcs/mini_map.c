@@ -6,7 +6,7 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 01:14:23 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/07/09 03:36:52 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/09 17:12:07 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,12 +60,17 @@ void	draw_rect(t_rect rect, int color, t_img *img)
 	return ;
 }
 
-unsigned int	get_pixel_color(t_txt *txt, int x, int y)
+unsigned int	get_pixel_color(t_img txt, int x, int y)
 {
 	char *dst;
 
 	dst = txt->east.addr + (x * (txt->east.bits_per_pixel / 8) + y * txt->east.line_length);
 	return((*(unsigned int*)dst));
+}
+
+t_img	get_wall_text(t_txt txt, float pa, int orientation)
+{
+	
 }
 
 void	draw_wall(t_img *img, t_stuff *stuff, t_txt txt, int x)
@@ -75,7 +80,9 @@ void	draw_wall(t_img *img, t_stuff *stuff, t_txt txt, int x)
 	int		y_start;
 	int		y_end;
 	float	wallstrip_height;
+	int		txt_wallstrip;
 
+	txt_wallstrip = 0;
 	wallstrip_height = stuff->raycast->wallstrip_height;
 	if (wallstrip_height > WINDOW_HEIGHT)
 	{
@@ -87,10 +94,16 @@ void	draw_wall(t_img *img, t_stuff *stuff, t_txt txt, int x)
 		y_start = (WINDOW_HEIGHT / 2 - wallstrip_height / 2);
 		y_end = y_start + wallstrip_height;
 	}
-	if (stuff->raycast->was_hit_vrt == 0)
+	if (stuff->raycast->was_hit_vrt[x] == 0)
+	{
 		x_off = (int)stuff->raycast->tab_hrz_x[x] % (int)TILE_SIZE;
+		// printf("xoff x: %i\n", x_off);
+	}
 	else
+	{
 		x_off = (int)stuff->raycast->tab_hrz_y[x] % (int)TILE_SIZE;
+		// printf("xoff y: %i\n", x_off);
+	}
 	x_off = (x_off * 64) / TILE_SIZE;
 	if (wallstrip_height > WINDOW_HEIGHT)
 		y_off = (wallstrip_height / 2 - WINDOW_HEIGHT / 2);
@@ -98,11 +111,11 @@ void	draw_wall(t_img *img, t_stuff *stuff, t_txt txt, int x)
 		y_off = 0;
 	while (y_start < y_end)
 	{
-		int prout = 0;
-		while (prout < WALL_STRIP)
+		int txt_wallstrip = 0;
+		while (txt_wallstrip < WALL_STRIP)
 		{
-			my_mlx_pixel_put(img, x, y_start, get_pixel_color(&txt, x_off, (y_off * 64) / wallstrip_height));
-			prout++;
+			my_mlx_pixel_put(img, x, y_start, get_pixel_color(get_wall_text(txt, stuff->pa, stuff->raycast->was_hit_vrt[x]), x_off, (y_off * 64) / wallstrip_height));
+			txt_wallstrip++;
 		}
 		y_start++;
 		y_off++;
@@ -258,6 +271,7 @@ void	draw_rays(t_img *img, t_stuff *stuff, char **map)
 	stuff->raycast->rays_angle = malloc(stuff->raycast->num_rays * sizeof(float));
 	stuff->raycast->tab_hrz_x = malloc(stuff->raycast->num_rays * sizeof(float));
 	stuff->raycast->tab_hrz_y = malloc(stuff->raycast->num_rays * sizeof(float));
+	stuff->raycast->was_hit_vrt = malloc(stuff->raycast->num_rays * sizeof(float));
 	if (!stuff->raycast->rays)
 		return;
 	while (i < stuff->raycast->num_rays)
@@ -265,7 +279,7 @@ void	draw_rays(t_img *img, t_stuff *stuff, char **map)
 		bc_angle = 0;
 		stuff->raycast->found_vhit = 0;
 		stuff->raycast->found_hhit = 0;
-		stuff->raycast->was_hit_vrt = 0;
+		stuff->raycast->was_hit_vrt[i] = 0;
 		if (ray_angle < 0)
 			ray_angle += 2*PI;
 		if (ray_angle > 2*PI)
@@ -385,7 +399,9 @@ void	draw_rays(t_img *img, t_stuff *stuff, char **map)
 			stuff->raycast->wall_hitx = stuff->raycast->vrt_wall_hitx;
 			stuff->raycast->wall_hity = stuff->raycast->vrt_wall_hity;
 			stuff->raycast->distance = stuff->raycast->v_distance;
-			stuff->raycast->was_hit_vrt = 1;
+			stuff->raycast->was_hit_vrt[i] = 1;
+			stuff->raycast->tab_hrz_x[i] = stuff->raycast->vrt_wall_hitx;
+			stuff->raycast->tab_hrz_y[i] = stuff->raycast->vrt_wall_hity;
 		}
 		float j = 0;
 		float x = stuff->px;
@@ -424,7 +440,12 @@ void	render_3D(t_img *img, t_stuff *stuff, char **map, t_combo combo)
 		while (x < WINDOW_WIDTH)
 		{
 			if (!(x < stuff->map_width && y < stuff->map_height))
-				my_mlx_pixel_put(img, x, y, 0x00000000);
+			{
+				if (y < WINDOW_HEIGHT / 2)
+					my_mlx_pixel_put(img, x, y, 0x00002330);
+				else
+					my_mlx_pixel_put(img, x, y, 0x00103000);
+			}
 			x++;
 		}
 		y++;
