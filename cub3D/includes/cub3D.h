@@ -6,7 +6,7 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/07 20:19:03 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/07/08 00:42:00 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/09 03:31:48 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,11 @@
 # define MINIMAP_SCALE_FACTOR 0.5
 # define TILE_SIZE (64 * MINIMAP_SCALE_FACTOR)
 # define FOV_ANGLE 60 * (PI / 180)
-# define WALL_STRIP 2
+# define WALL_STRIP 1
+# define EAST "textures/east.xpm"
+# define NORTH "textures/north.xpm"
+# define WEST "textures/west.xpm"
+# define SOUTH "textures/south.xpm"
 // # define NUM_RAYS 
 
 // mp = position sur la map
@@ -52,6 +56,20 @@
  next_htouchy = coordonnees d'intersection +1 pour tomber dans la case
  */
 
+// typedef	struct	s_txt
+// {
+// 	int		img_size;
+// 	int		width;
+// 	int		height;
+// 	int		bpp;
+// 	int		size_line;
+// 	int		endian;
+// 	char	*img_data;
+// 	void	*img_ptr;
+// }				t_txt;
+
+
+
 typedef struct	s_raycast
 {
 	float	wall_hitx;
@@ -73,6 +91,9 @@ typedef struct	s_raycast
 	float	next_vtouchy;
 	float	*rays_angle;
 	float	*rays;
+	float	*tab_hrz_x;
+	float	*tab_hrz_y;
+	float	wallstrip_height;
 	int		found_vhit;
 	int		found_hhit;
 	int		was_hit_vrt;
@@ -82,6 +103,31 @@ typedef struct	s_raycast
 	int		left;
 	int		num_rays;
 }					t_raycast;
+
+typedef struct	s_img {
+	void	*img;
+	char	*addr;
+	int		bits_per_pixel;
+	int		line_length;
+	int		endian;
+	int		h;
+	int		w;
+}				t_img;
+
+typedef struct s_txt {
+	t_img	east;
+	t_img	north;
+	t_img	west;
+	t_img	south;
+}				t_txt;
+
+typedef struct s_data {
+	void	*mlx;
+	void	*win;
+	t_txt	txt;
+	int		x;
+	int		y;
+}				t_data;
 
 typedef struct s_stuff
 {
@@ -98,21 +144,6 @@ typedef struct s_stuff
 	t_raycast	*raycast;
 	
 }				t_stuff;
-
-typedef struct s_data {
-	void	*mlx;
-	void	*win;
-	int		x;
-	int		y;
-}				t_data;
-
-typedef struct	s_img {
-	void	*img;
-	char	*addr;
-	int		bits_per_pixel;
-	int		line_length;
-	int		endian;
-}				t_img;
 
 typedef struct s_combo {
 	t_data		*mlx;
@@ -189,7 +220,7 @@ void	fill_grey(int width, int height, t_img *img);
 void	draw_player(t_img *img, t_stuff stuff);
 void	build_walls(char **map, t_img *img, t_stuff *stuff);
 void	draw_rays(t_img *img, t_stuff *stuff, char **map);
-void	render_3D(t_img *img, t_stuff *stuff, char **map);
+void	render_3D(t_img *img, t_stuff *stuff, char **map, t_combo combo);
 // void	draw_map(t_stuff stuff, t_img *img);
 
 /* -------------------------------------------------------------------------- */

@@ -6,7 +6,7 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 01:14:23 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/07/08 00:38:08 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/09 03:36:52 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,55 @@ void	draw_rect(t_rect rect, int color, t_img *img)
 		y++;
 	}
 	return ;
+}
+
+unsigned int	get_pixel_color(t_txt *txt, int x, int y)
+{
+	char *dst;
+
+	dst = txt->east.addr + (x * (txt->east.bits_per_pixel / 8) + y * txt->east.line_length);
+	return((*(unsigned int*)dst));
+}
+
+void	draw_wall(t_img *img, t_stuff *stuff, t_txt txt, int x)
+{
+	int		y_off;
+	int		x_off;
+	int		y_start;
+	int		y_end;
+	float	wallstrip_height;
+
+	wallstrip_height = stuff->raycast->wallstrip_height;
+	if (wallstrip_height > WINDOW_HEIGHT)
+	{
+		y_start = 0;
+		y_end = WINDOW_HEIGHT;
+	}
+	else
+	{
+		y_start = (WINDOW_HEIGHT / 2 - wallstrip_height / 2);
+		y_end = y_start + wallstrip_height;
+	}
+	if (stuff->raycast->was_hit_vrt == 0)
+		x_off = (int)stuff->raycast->tab_hrz_x[x] % (int)TILE_SIZE;
+	else
+		x_off = (int)stuff->raycast->tab_hrz_y[x] % (int)TILE_SIZE;
+	x_off = (x_off * 64) / TILE_SIZE;
+	if (wallstrip_height > WINDOW_HEIGHT)
+		y_off = (wallstrip_height / 2 - WINDOW_HEIGHT / 2);
+	else
+		y_off = 0;
+	while (y_start < y_end)
+	{
+		int prout = 0;
+		while (prout < WALL_STRIP)
+		{
+			my_mlx_pixel_put(img, x, y_start, get_pixel_color(&txt, x_off, (y_off * 64) / wallstrip_height));
+			prout++;
+		}
+		y_start++;
+		y_off++;
+	}
 }
 
 void	fill_grey(int width, int height, t_img *img)
@@ -207,6 +256,8 @@ void	draw_rays(t_img *img, t_stuff *stuff, char **map)
 	ray_angle = stuff->pa - (FOV_ANGLE / 2);
 	stuff->raycast->rays = malloc(stuff->raycast->num_rays * sizeof(float));
 	stuff->raycast->rays_angle = malloc(stuff->raycast->num_rays * sizeof(float));
+	stuff->raycast->tab_hrz_x = malloc(stuff->raycast->num_rays * sizeof(float));
+	stuff->raycast->tab_hrz_y = malloc(stuff->raycast->num_rays * sizeof(float));
 	if (!stuff->raycast->rays)
 		return;
 	while (i < stuff->raycast->num_rays)
@@ -326,6 +377,8 @@ void	draw_rays(t_img *img, t_stuff *stuff, char **map)
 			stuff->raycast->wall_hitx = stuff->raycast->hrz_wall_hitx;
 			stuff->raycast->wall_hity = stuff->raycast->hrz_wall_hity;
 			stuff->raycast->distance = stuff->raycast->h_distance;
+			stuff->raycast->tab_hrz_x[i] = stuff->raycast->hrz_wall_hitx;
+			stuff->raycast->tab_hrz_y[i] = stuff->raycast->hrz_wall_hity;
 		}
 		else
 		{
@@ -352,7 +405,7 @@ void	draw_rays(t_img *img, t_stuff *stuff, char **map)
 	}
 }
 
-void	render_3D(t_img *img, t_stuff *stuff, char **map)
+void	render_3D(t_img *img, t_stuff *stuff, char **map, t_combo combo)
 {
 	(void)map;
 	(void)img;
@@ -385,20 +438,40 @@ void	render_3D(t_img *img, t_stuff *stuff, char **map)
 
 		// projected wall height
 		wallstrip_height = (TILE_SIZE / ray) * dist_project_plane;
-		if (wallstrip_height > WINDOW_HEIGHT)
-			wallstrip_height = WINDOW_HEIGHT;
+		// if (wallstrip_height > WINDOW_HEIGHT)
+		// 	wallstrip_height = WINDOW_HEIGHT;
 		rect.x = i * WALL_STRIP;
 		rect.y = (WINDOW_HEIGHT / 2) - (wallstrip_height / 2);
 		rect.width = WALL_STRIP;
 		rect.height = wallstrip_height;
+		stuff->raycast->wallstrip_height = wallstrip_height;
 		// printf("ray : %f\nx : %f\ny : %f\nwidth : %f\nheight : %f\n", ray, rect.x, rect.y, rect.width, rect.height);
 		// my_mlx_pixel_put(img, rect.x, rect.y, 0x009CFF9F);
-		draw_rect(rect, 0x009CFF9F, img);
+		// draw_rect(rect, 0x009CFF9F, img);
+		
+		draw_wall(img, stuff, combo.mlx->txt, i);
 		
 		i++;
 	}
 	free(stuff->raycast->rays_angle);
 	free(stuff->raycast->rays);
+}
+
+void	init_txt(t_data *mlx, t_img *txt, char *path, t_combo *combo)
+{
+	txt->img = mlx_xpm_file_to_image(mlx->mlx, path, &txt->h, &txt->w);
+	if (!txt->img)
+		free_mlx(mlx, txt, combo->map, combo->stuff->line_count);
+	txt->addr = mlx_get_data_addr(txt->img, &txt->bits_per_pixel,
+	&txt->line_length, &txt->endian);
+}
+
+void	get_txt(t_data *mlx, t_combo *combo)
+{
+	init_txt(mlx, &mlx->txt.east, EAST, combo);
+	init_txt(mlx, &mlx->txt.north, NORTH, combo);
+	init_txt(mlx, &mlx->txt.west, WEST, combo);
+	init_txt(mlx, &mlx->txt.south, SOUTH, combo);
 }
 
 void	mini_map(char **map, t_stuff stuff)
@@ -432,6 +505,7 @@ void	mini_map(char **map, t_stuff stuff)
 	img.img = mlx_new_image(mlx.mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	img.addr = mlx_get_data_addr(img.img, &img.bits_per_pixel, &img.line_length, &img.endian);
 	// draw_map()
+	get_txt(&mlx, &combo);
 	fill_grey(stuff.map_width, stuff.map_height, &img);
 	build_walls(map, &img, &stuff);
 	draw_player(&img, stuff);
@@ -442,7 +516,7 @@ void	mini_map(char **map, t_stuff stuff)
 	// 	printf("ray : %f\n", stuff.raycast->rays[i]);
 	// 	i++;
 	// }
-	render_3D(&img, &stuff, map);
+	render_3D(&img, &stuff, map, combo);
 	combo.img = &img;
 	mlx_put_image_to_window(mlx.mlx, mlx.win, img.img, 0, 0);
 	mlx_hook(mlx.win, 17, 0L, &ft_cross, &combo);

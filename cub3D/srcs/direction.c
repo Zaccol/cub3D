@@ -6,7 +6,7 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/10 01:01:14 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/07/01 04:57:48 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/08 22:18:15 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ void	move_right(t_combo *combo)
 	build_walls(combo->map, combo->img, combo->stuff);
 	draw_player(combo->img, *(combo->stuff));
 	draw_rays(combo->img, combo->stuff, combo->map);
-	render_3D(combo->img, combo->stuff, combo->map);
+	render_3D(combo->img, combo->stuff, combo->map, *combo);
 	mlx_put_image_to_window(combo->mlx->mlx, combo->mlx->win, combo->img->img, 0, 0);
 	return ;
 }
@@ -55,7 +55,7 @@ void	move_up(t_combo *combo)
 	build_walls(combo->map, combo->img, combo->stuff);
 	draw_player(combo->img, *(combo->stuff));
 	draw_rays(combo->img, combo->stuff, combo->map);
-	render_3D(combo->img, combo->stuff, combo->map);
+	render_3D(combo->img, combo->stuff, combo->map, *combo);
 	mlx_put_image_to_window(combo->mlx->mlx, combo->mlx->win, combo->img->img, 0, 0);
 	return ;
 }
@@ -73,7 +73,7 @@ void	move_left(t_combo *combo)
 	build_walls(combo->map, combo->img, combo->stuff);
 	draw_player(combo->img, *(combo->stuff));
 	draw_rays(combo->img, combo->stuff, combo->map);
-	render_3D(combo->img, combo->stuff, combo->map);
+	render_3D(combo->img, combo->stuff, combo->map, *combo);
 	mlx_put_image_to_window(combo->mlx->mlx, combo->mlx->win, combo->img->img, 0, 0);
 	return ;
 }
@@ -88,7 +88,7 @@ void	move_down(t_combo *combo)
 	build_walls(combo->map, combo->img, combo->stuff);
 	draw_player(combo->img, *(combo->stuff));
 	draw_rays(combo->img, combo->stuff, combo->map);
-	render_3D(combo->img, combo->stuff, combo->map);
+	render_3D(combo->img, combo->stuff, combo->map, *combo);
 	mlx_put_image_to_window(combo->mlx->mlx, combo->mlx->win, combo->img->img, 0, 0);
 	return ;
 }
