@@ -6,7 +6,7 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 19:51:23 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/06/15 01:25:25 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/10 18:08:49 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,8 @@ int	is_wrong_elem(char c, t_stuff *stuff, int i, int j)
 		return (0);
 	else if (c == 'P')
 	{
-		stuff->player++;
-		if (stuff->player != 1)
+		stuff->p_cnt++;
+		if (stuff->p_cnt != 1)
 			return (1);
 		stuff->px = j;
 		stuff->py = i;
@@ -32,8 +32,8 @@ int	is_wrong_elem(char c, t_stuff *stuff, int i, int j)
 
 void	verif_map(char **map, t_stuff *stuff)
 {
-	if (stuff->player == 0)
-		free_map_exit(map, stuff->line_count, "Error : no player\n");
+	if (stuff->p_cnt == 0)
+		free_map_exit(map, stuff->line_count, "Error : nop_cnt\n");
 	return ;
 }
 

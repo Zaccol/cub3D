@@ -6,7 +6,7 @@
 /*   By: lzaccome <lzaccome@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 01:14:23 by lzaccome          #+#    #+#             */
-/*   Updated: 2022/07/09 17:12:07 by lzaccome         ###   ########.fr       */
+/*   Updated: 2022/07/10 15:30:47 by lzaccome         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,14 @@ void	free_mlx(t_data *mlx, t_img *img, char **map, int line_count)
 {
 	if (mlx->mlx)
 	{
+		if (mlx->txt.east.img)
+			mlx_destroy_image(mlx->mlx, mlx->txt.east.img);
+		if (mlx->txt.north.img)
+			mlx_destroy_image(mlx->mlx, mlx->txt.north.img);
+		if (mlx->txt.west.img)
+			mlx_destroy_image(mlx->mlx, mlx->txt.west.img);
+		if (mlx->txt.south.img)
+			mlx_destroy_image(mlx->mlx, mlx->txt.south.img);
 		if (img->img)
 			mlx_destroy_image(mlx->mlx, img->img);
 		if (mlx->win)
@@ -64,16 +72,29 @@ unsigned int	get_pixel_color(t_img txt, int x, int y)
 {
 	char *dst;
 
-	dst = txt->east.addr + (x * (txt->east.bits_per_pixel / 8) + y * txt->east.line_length);
+	dst = txt.addr + (x * (txt.bits_per_pixel / 8) + y * txt.line_length);
 	return((*(unsigned int*)dst));
 }
 
 t_img	get_wall_text(t_txt txt, float pa, int orientation)
 {
-	
+	if (orientation)
+	{
+		if (pa < 0.5 * PI || pa > 1.5 * PI)
+			return (txt.south);
+		else
+			return (txt.west);
+	}
+	else
+	{
+		if(!(pa > 0 && pa < PI))
+			return (txt.east);
+		else
+			return (txt.north);
+	}
 }
 
-void	draw_wall(t_img *img, t_stuff *stuff, t_txt txt, int x)
+void	draw_wall(t_img *img, t_stuff *stuff, t_img txt, int x)
 {
 	int		y_off;
 	int		x_off;
@@ -114,7 +135,10 @@ void	draw_wall(t_img *img, t_stuff *stuff, t_txt txt, int x)
 		int txt_wallstrip = 0;
 		while (txt_wallstrip < WALL_STRIP)
 		{
-			my_mlx_pixel_put(img, x, y_start, get_pixel_color(get_wall_text(txt, stuff->pa, stuff->raycast->was_hit_vrt[x]), x_off, (y_off * 64) / wallstrip_height));
+			if (!(x < stuff->map_width && y_start < stuff->map_height))
+			{
+				my_mlx_pixel_put(img, x, y_start, get_pixel_color(txt, x_off, (y_off * 64) / wallstrip_height));
+			}
 			txt_wallstrip++;
 		}
 		y_start++;
@@ -209,13 +233,13 @@ void	draw_player(t_img *img, t_stuff stuff)
 		width = -2;
 		height++;
 	}
-	while (i < (50 * MINIMAP_SCALE_FACTOR))
-	{
-		stuff.px += stuff.pdx/5;
-		stuff.py += stuff.pdy/5;
-		my_mlx_pixel_put(img, stuff.px, stuff.py, 0xFFDC16);
-		i++;
-	}
+	// while (i < (50 * MINIMAP_SCALE_FACTOR))
+	// {
+	// 	stuff.px += stuff.pdx/5;
+	// 	stuff.py += stuff.pdy/5;
+	// 	my_mlx_pixel_put(img, stuff.px, stuff.py, 0xFFDC16);
+	// 	i++;
+	// }
 	return ;
 }
 
@@ -469,13 +493,14 @@ void	render_3D(t_img *img, t_stuff *stuff, char **map, t_combo combo)
 		// printf("ray : %f\nx : %f\ny : %f\nwidth : %f\nheight : %f\n", ray, rect.x, rect.y, rect.width, rect.height);
 		// my_mlx_pixel_put(img, rect.x, rect.y, 0x009CFF9F);
 		// draw_rect(rect, 0x009CFF9F, img);
-		
-		draw_wall(img, stuff, combo.mlx->txt, i);
-		
+		draw_wall(img, stuff, get_wall_text(combo.mlx->txt, stuff->raycast->rays_angle[i], stuff->raycast->was_hit_vrt[i]), i);
 		i++;
 	}
 	free(stuff->raycast->rays_angle);
 	free(stuff->raycast->rays);
+	free(stuff->raycast->tab_hrz_x);
+	free(stuff->raycast->tab_hrz_y);
+	free(stuff->raycast->was_hit_vrt);
 }
 
 void	init_txt(t_data *mlx, t_img *txt, char *path, t_combo *combo)
